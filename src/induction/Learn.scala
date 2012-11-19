@@ -1,5 +1,7 @@
 package induction
 
+import induction.hmm.ModelParameters
+import induction.hmm.HMM
 import induction.mutable.ConditionalProbabilityDistribution
 import induction.mutable.PriorProbabilityDistribution
 import induction.mutable.Vocabulary
@@ -7,18 +9,19 @@ import induction.mutable.Vocabulary
 object Learn {
 
   def main(args: Array[String]): Unit = {
-    
-    
+        
     val textFile = args(0)
     val numHiddenStates = args(1).toInt
     
-    val hmm = new HMM(textFile,numHiddenStates)
+    val λ = new ModelParameters(textFile,numHiddenStates)
     
-    //println(hmm.β.toString(Some(hmm.vocab),None))
-    
-    //println(hmm.α.toString(None,None))
-
-    //println(hmm.π.toString(None))
+    for (line <- scala.io.Source.fromFile(textFile,"UTF-8").getLines) {
+      println(line)
+      val hmm = new HMM(line,λ)
+      println("Created hmm")
+      println(hmm.α)
+      println(hmm.β)
+    }
     
   }
 
