@@ -8,7 +8,7 @@ class Vocabulary extends induction.traits.Vocabulary {
 	val stringToInt = new HashMap[String,Int]
 	val intToString = new ArrayBuffer[String]
 
-	intToString(0) = OUT_OF_VOCABULARY
+	intToString.append(OUT_OF_VOCABULARY)
 	
 	override def getInt(s:String) : Int = {
 	  if (! stringToInt.contains(s)) {
