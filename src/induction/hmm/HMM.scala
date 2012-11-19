@@ -5,6 +5,8 @@ import scala.collection.mutable.HashMap
 
 class HMM(sentence:String, val λ:ModelParameters) {
 
+  import λ._
+  
   /** 
    * Observation sequence
    * <p>
@@ -16,18 +18,21 @@ class HMM(sentence:String, val λ:ModelParameters) {
   val T: Int = O.length
   
   
+  /** Forward probability cache */
+  private val αCache = new HashMap[(Int,Int),Double]
+  
+  /** Backward probability cache */
+  private val βCache = new HashMap[(Int,Int),Double]
+
+  
   /** Forward probability of entire observation sequence. */
   def α : Double = {
-    import λ._
-    
     var sum = 0.0
     for (i <- 1 to N) {
     	sum += α(T,i)
     }
     return sum
   }
-  
-  val αCache = new HashMap[(Int,Int),Double]
 
   /** 
    * Forward probability of observation sequence up to time <code>t</code>.
@@ -44,10 +49,7 @@ class HMM(sentence:String, val λ:ModelParameters) {
     	
     } else {
       
-    	// Otherwise calculate α(t,j)
-      
-    	import λ._
-	   
+    	// Otherwise calculate α(t,j)	   
     	val value = 
 		    if (t < 1 || t > T) {
 		      throw new ArrayIndexOutOfBoundsException(t)
@@ -73,7 +75,6 @@ class HMM(sentence:String, val λ:ModelParameters) {
 
   /** Backward probability of entire observation sequence. */
   def β : Double = {
-    import λ._
     
     var sum = 0.0
     for (i <- 1 to N) {
@@ -81,8 +82,6 @@ class HMM(sentence:String, val λ:ModelParameters) {
     }
     return sum
   }
-  
-  val βCache = new HashMap[(Int,Int),Double]
   
   /**
    * Backward probability of the observation sequence after time <code>t</code>.
@@ -99,10 +98,7 @@ class HMM(sentence:String, val λ:ModelParameters) {
     	
     } else {
       
-    	// Otherwise calculate β(t,j)
-    	
-    	import λ._
-	   
+    	// Otherwise calculate β(t,j)	   
     	val value = 
 		    if (t < 1 || t > T) {
 		      throw new ArrayIndexOutOfBoundsException(t)
@@ -125,4 +121,22 @@ class HMM(sentence:String, val λ:ModelParameters) {
     
   }
   
+  /**
+   * Probability of being in state <code>i</code> at time <code>t</code>
+   * and transitioning into state <code>j</code> at time <code>t+1</code> 
+   */
+  def ξ(t:Int, i:Int,j:Int) : Double = {
+	return (α(t,i) * a(i,j) * b(j,O(t+1)) * β(t+1,j)) / α     
+  }
+  
+  /**
+   * Probability of being in state <code>i</code> at time <code>t</code> 
+   */  
+  def γ(t:Int, i:Int) : Double = {
+	var sum = 0.0
+	for (j <- 1 to N) {
+		sum += ξ(t,i,j)
+	}
+	return sum
+  }
 }
