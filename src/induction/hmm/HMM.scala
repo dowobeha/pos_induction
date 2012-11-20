@@ -19,11 +19,14 @@ class HMM(sentence:String, val λ:ModelParameters) {
   
   
   /** Forward probability cache */
-  private val αCache = new HashMap[(Int,Int),Double]
+  private val previouslyCalculated_α = new HashMap[(Int,Int),Double]
   
   /** Backward probability cache */
-  private val βCache = new HashMap[(Int,Int),Double]
+  private val previouslyCalculated_β = new HashMap[(Int,Int),Double]
 
+  private val previouslyCalculated_ξ = new HashMap[(Int,Int,Int),Double]
+  
+  private val previouslyCalculated_γ = new HashMap[(Int,Int),Double]
   
   /** Forward probability of entire observation sequence. */
   def α : Double = {
@@ -42,10 +45,10 @@ class HMM(sentence:String, val λ:ModelParameters) {
    */
   def α(t:Int,j:Int) : Double = {
     
-    if (αCache.contains(t,j)) {
+    if (previouslyCalculated_α.contains(t,j)) {
 
     	// If we have previously calculated α(t,j) just look it up
-    	return αCache(t,j)
+    	return previouslyCalculated_α(t,j)
     	
     } else {
       
@@ -67,7 +70,7 @@ class HMM(sentence:String, val λ:ModelParameters) {
 		      sum * b(j,O(t)) 
 		    }
     	
-    	αCache.update((t,j),value)
+    	previouslyCalculated_α.update((t,j),value)
     	
     	return value
     }
@@ -91,10 +94,10 @@ class HMM(sentence:String, val λ:ModelParameters) {
    */
   def β(t:Int,j:Int) : Double = {
      
-    if (βCache.contains(t,j)) {
+    if (previouslyCalculated_β.contains(t,j)) {
 
     	// If we have previously calculated β(t,j) just look it up
-    	return βCache(t,j)
+    	return previouslyCalculated_β(t,j)
     	
     } else {
       
@@ -114,7 +117,7 @@ class HMM(sentence:String, val λ:ModelParameters) {
 		      sum
 		    }
     	
-    	βCache.update((t,j),value)
+    	previouslyCalculated_β.update((t,j),value)
     	
     	return value
     }
@@ -126,17 +129,81 @@ class HMM(sentence:String, val λ:ModelParameters) {
    * and transitioning into state <code>j</code> at time <code>t+1</code> 
    */
   def ξ(t:Int, i:Int,j:Int) : Double = {
-	return (α(t,i) * a(i,j) * b(j,O(t+1)) * β(t+1,j)) / α     
+    if (previouslyCalculated_ξ.contains(t,i,j)) {
+      return previouslyCalculated_ξ(t,i,j)
+    } else {
+      val value = (α(t,i) * a(i,j) * b(j,O(t+1)) * β(t+1,j)) / α 
+      previouslyCalculated_ξ.update((t,i,j), value)
+      return value
+    } 
   }
   
   /**
    * Probability of being in state <code>i</code> at time <code>t</code> 
    */  
   def γ(t:Int, i:Int) : Double = {
-	var sum = 0.0
-	for (j <- 1 to N) {
+    if (previouslyCalculated_γ.contains(t,i)) {
+      return previouslyCalculated_γ(t,i)
+    } else {
+    	var sum = 0.0
+    	for (j <- 1 to N) {
+    		sum += ξ(t,i,j)
+    	}
+    	previouslyCalculated_γ.update((t,i),sum)
+    	return sum
+    }
+  }
+
+  
+  
+  
+  /**
+   * Returns the count of how often this HMM
+   * is expected to begin in state <code>i</code>.
+   */
+  def expectedStartsFrom_i(i:Int) : Double = {
+    return γ(1,i)
+  }
+
+  /**
+   * Returns the count of how often this HMM
+   * is expected to transition from state <code>i</code>
+   * into state <code>j</code>.
+   */  
+  def expectedTransitionsFrom_i_to_j(i:Int, j:Int) : Double = {
+    var sum = 0.0
+	for (t <- 1 to T) {
 		sum += ξ(t,i,j)
 	}
 	return sum
   }
+
+  /**
+   * Returns the count of how often this HMM
+   * is expected to transition from state <code>i</code>
+   * into any next state.
+   */   
+  def expectedTransitionsFrom_i(i:Int) : Double = {
+    var sum = 0.0
+	for (t <- 1 to T) {
+		sum += γ(t,i)
+	}
+	return sum
+  }
+
+  /**
+   * Returns the count of how often this HMM
+   * is expected to emit observation <code>k</code>
+   * from state <code>i</code>.
+   */   
+  def expectedObservationsOf_k_from_i(i:Int, k:Int) : Double = {
+    var sum = 0.0
+	for (t <- 1 to T) {
+		if (k == V.getInt(O(t))) {
+			sum += γ(t,i)
+		}
+	}
+	return sum
+  }
+  
 }

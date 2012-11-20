@@ -10,6 +10,10 @@ class PriorProbabilityDistribution(val variableVocabSize:Int) extends induction.
     probabilities(variable) = probability
   }
   
+  def setUniform {
+    setUniform(1.0 / variableVocabSize.toDouble)
+  }
+  
   def setUniform(probability:Double) {
     for (i <- 0 until probabilities.size) { 
     	probabilities(i) = probability

@@ -4,6 +4,16 @@ import induction.mutable.ConditionalProbabilityDistribution
 import induction.mutable.PriorProbabilityDistribution
 import induction.mutable.Vocabulary
 
+object ModelParameters {
+  def uniform(V:Vocabulary, numHiddenStates:Int) : ModelParameters = {
+    val m = new ModelParameters(V,numHiddenStates)
+    m.Π.setUniform
+    m.A.setUniform
+    m.B.setUniform
+    return m
+  }
+}
+
 /**
  * Parameters for a Hidden Markov Model, following the terminology of Rabiner & Juang (1986).
  * 
@@ -11,27 +21,24 @@ import induction.mutable.Vocabulary
  *      An Introduction to Hidden Markov Models. 
  *      IEEE ASSP Magazine. January 1986. 
  */
-class ModelParameters(textFile:String, numHiddenStates:Int) {
-
-	/** Vocabulary of observation symbols */
-  	val V = new Vocabulary()
-
-	// Read vocabulary of observation symbols from text file
-	for (line <- scala.io.Source.fromFile(textFile,"UTF-8").getLines) {
-		for (word <- line.split("""\s+""")) {
-			V.getInt(word)
-		}
-    }
+class ModelParameters(val V:Vocabulary, numHiddenStates:Int) {
 
   	/** Prior distribution over hidden states */
-    private val Π = PriorProbabilityDistribution.uniform(numHiddenStates)
+    private val Π = new PriorProbabilityDistribution(numHiddenStates)
     
     /** Hidden state transition distribution */
-    private val A = ConditionalProbabilityDistribution.uniform(numHiddenStates,numHiddenStates)
+    private val A = new ConditionalProbabilityDistribution(numHiddenStates,numHiddenStates)
     
     /** Observation symbol emission distribution */
-    private val B = ConditionalProbabilityDistribution.uniform(V.size,numHiddenStates)
-  
+    private val B = new ConditionalProbabilityDistribution(V.size,numHiddenStates)
+
+    def this(V:Vocabulary, numHiddenStates:Int, hmms:Iterable[HMM]) = {
+      this(V,numHiddenStates)
+      
+      //TODO Use expected* methods from HMMs to calculate new values for Π, A, B
+      
+    }
+    
     /**
      * Prior probability of beginning in state i.
      * <p>

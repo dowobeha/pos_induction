@@ -12,8 +12,18 @@ object Learn {
         
     val textFile = args(0)
     val numHiddenStates = args(1).toInt
+
+	/** Vocabulary of observation symbols */
+  	val V = new Vocabulary()
+
+	// Read vocabulary of observation symbols from text file
+	for (line <- scala.io.Source.fromFile(textFile,"UTF-8").getLines) {
+		for (word <- line.split("""\s+""")) {
+			V.getInt(word)
+		}
+    }
     
-    val λ = new ModelParameters(textFile,numHiddenStates)
+    val λ = ModelParameters.uniform(V,numHiddenStates)
     
     for (line <- scala.io.Source.fromFile(textFile,"UTF-8").getLines) {
       println(line)
