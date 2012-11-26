@@ -22,6 +22,8 @@ class ConditionalProbabilityDistribution(val variableVocabSize:Int, val givenVar
   	}
   }
 
+  def immutable = new induction.immutable.ConditionalProbabilityDistribution(this)
+  
 }
 
 

@@ -20,6 +20,8 @@ class PriorProbabilityDistribution(val variableVocabSize:Int) extends induction.
   	}
   }
 
+  def immutable = new induction.immutable.PriorProbabilityDistribution(this)
+  
 }
 
 

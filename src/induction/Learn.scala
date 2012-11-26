@@ -23,7 +23,7 @@ object Learn {
 		}
     }
     
-    val λ = ModelParameters.uniform(V,numHiddenStates)
+    val λ = ModelParameters.uniform(V.immutable,numHiddenStates)
     
     for (line <- scala.io.Source.fromFile(textFile,"UTF-8").getLines) {
       println(line)

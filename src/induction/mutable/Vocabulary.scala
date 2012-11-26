@@ -19,4 +19,6 @@ class Vocabulary extends induction.traits.Vocabulary {
 	  return stringToInt(s)
 	}
 	
+	def immutable = new induction.immutable.Vocabulary(this)
+	
 }
