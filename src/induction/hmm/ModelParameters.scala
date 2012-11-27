@@ -102,8 +102,11 @@ object ModelParameters {
 
 	def reestimate(λ:ModelParameters, hmms:Iterable[HMM]) : ModelParameters = {
 	    
+	    System.err.println("Re-estimating Π")
 	    val Π = reestimate_Π(λ.N, hmms)
+	    System.err.println("Re-estimating A")
 	    val A = reestimate_A(λ.N, hmms)
+	    System.err.println("Re-estimating B")
 	    val B = reestimate_B(λ.V, λ.N, hmms)
 	    
 	    return new ModelParameters(λ.N, Π, A, B, λ.V)
@@ -121,13 +124,14 @@ object ModelParameters {
     	
     	var totalExpectedStarts : Double = 0.0
     	for (hmm <- hmms) {
+    	    System.err.print(".")
     		hmm.λ.hiddenStateIndices.foreach(i => {
     			val count  = hmm.expectedStartsFrom_i(i)
     			expectedStartsFrom(i) += count
     			totalExpectedStarts   += count
     		})
     	}
-	      
+	    System.err.print("\n")  
     	val Π = new PriorProbabilityDistribution(numHiddenStates)
     	hmms.head.λ.hiddenStateIndices.foreach(i => {
     		Π(i) = expectedStartsFrom(i) / totalExpectedStarts  
@@ -154,6 +158,7 @@ object ModelParameters {
         }
         
         hmms.foreach( hmm => {
+            System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
                 totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i)
             	hmm.λ.hiddenStateIndices.foreach(j => {
@@ -161,7 +166,7 @@ object ModelParameters {
             	})
             })
         })
-        
+        System.err.println("\n")
         val A = new ConditionalProbabilityDistribution(numHiddenStates,numHiddenStates)
         
         hmms.head.λ.hiddenStateIndices.foreach(i => {
@@ -185,6 +190,7 @@ object ModelParameters {
         }
 
         hmms.foreach( hmm => {
+            System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
                 totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i)
             	V.indices.foreach(k => {
@@ -192,7 +198,7 @@ object ModelParameters {
             	})
             })
         })        
-        
+        System.err.print("\n")
         val B = new ConditionalProbabilityDistribution(V.size,numHiddenStates)
         hmms.head.λ.hiddenStateIndices.foreach(i => {
     		V.indices.foreach(k => {
