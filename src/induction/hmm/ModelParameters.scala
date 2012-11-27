@@ -166,7 +166,7 @@ object ModelParameters {
             	})
             })
         })
-        System.err.println("\n")
+        System.err.print("\n")
         val A = new ConditionalProbabilityDistribution(numHiddenStates,numHiddenStates)
         
         hmms.head.λ.hiddenStateIndices.foreach(i => {
