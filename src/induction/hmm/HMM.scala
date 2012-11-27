@@ -2,6 +2,7 @@ package induction.hmm
 
 import induction.util.OneBasedArray
 import induction.math.Math
+import induction.math.Probability
 import scala.collection.mutable.HashMap
 
 class HMM(val sentence:String, val λ:ModelParameters) {
@@ -19,26 +20,26 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   val T: Int = O.length
     
   /** Defines a summation over hidden state indices. */
-  def Σ_hiddenStates(f:(Int => BigDecimal)) = Math.summation(λ.hiddenStateIndices, f)//λ.hiddenStateIndices.foldLeft(0.0) ((runningSum,i) => runningSum + f(i))
+  def Σ_hiddenStates(f:(Int => Probability)) = Math.summation(λ.hiddenStateIndices, f)//λ.hiddenStateIndices.foldLeft(0.0) ((runningSum,i) => runningSum + f(i))
     
   /** Defines a summation over time, for t=1 to T-1. */
-  def Σ_time(f:(Int => BigDecimal)) = Math.summation(1 until T, f)
+  def Σ_time(f:(Int => Probability)) = Math.summation(1 until T, f)
 
   /** Defines a summation over time, for t=1 to T. */
-  def Σ_observations(f:(Int => BigDecimal)) = Math.summation(1 to T, f)  
+  def Σ_observations(f:(Int => Probability)) = Math.summation(1 to T, f)  
   
   /** Forward probability cache */
-  private val previouslyCalculated_α = new HashMap[(Int,Int),BigDecimal]
+  private val previouslyCalculated_α = new HashMap[(Int,Int),Probability]
   
   /** Backward probability cache */
-  private val previouslyCalculated_β = new HashMap[(Int,Int),BigDecimal]
+  private val previouslyCalculated_β = new HashMap[(Int,Int),Probability]
 
-  private val previouslyCalculated_ξ = new HashMap[(Int,Int,Int),BigDecimal]
+  private val previouslyCalculated_ξ = new HashMap[(Int,Int,Int),Probability]
   
-  private val previouslyCalculated_γ = new HashMap[(Int,Int),BigDecimal]
+  private val previouslyCalculated_γ = new HashMap[(Int,Int),Probability]
   
   /** Forward probability of entire observation sequence. */
-  def α : BigDecimal = {
+  def α : Probability = {
     return Σ_hiddenStates( i => α(T,i) )
   }
 
@@ -48,7 +49,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * @param t Word index (1-based index)
    * @param j Hidden state value (1-based index)
    */
-  def α(t:Int,j:Int) : BigDecimal = {
+  def α(t:Int,j:Int) : Probability = {
     
     if (previouslyCalculated_α.contains(t,j)) {
 
@@ -78,7 +79,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   }
 
   /** Backward probability of entire observation sequence. */
-  def β : BigDecimal = Σ_hiddenStates( i => β(1,i) )
+  def β : Probability = Σ_hiddenStates( i => β(1,i) )
   
   /**
    * Backward probability of the observation sequence after time <code>t</code>.
@@ -86,7 +87,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * @param t Word index (1-based index)
    * @param j Hidden state value (1-based index)
    */
-  def β(t:Int,j:Int) : BigDecimal = {
+  def β(t:Int,j:Int) : Probability = {
      
     if (previouslyCalculated_β.contains(t,j)) {
 
@@ -102,7 +103,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
 		    } else if (j < 0 || j >= N) {
 		      throw new ArrayIndexOutOfBoundsException(j)
 		    } else if (t==T) {
-		      BigDecimal(1)
+		      new Probability(1)
 		    } else {
 		      Σ_hiddenStates( i => a(i,j) * b(j,O(t+1)) * β(t+1,j) )
 		    }
@@ -118,7 +119,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * Probability of being in state <code>i</code> at time <code>t</code>
    * and transitioning into state <code>j</code> at time <code>t+1</code> 
    */
-  def ξ(t:Int, i:Int,j:Int) : BigDecimal = {
+  def ξ(t:Int, i:Int,j:Int) : Probability = {
     if (previouslyCalculated_ξ.contains(t,i,j)) {
       return previouslyCalculated_ξ(t,i,j)
     } else {
@@ -131,7 +132,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   /**
    * Probability of being in state <code>i</code> at time <code>t</code> 
    */  
-  def γ(t:Int, i:Int) : BigDecimal = {
+  def γ(t:Int, i:Int) : Probability = {
     if (previouslyCalculated_γ.contains(t,i)) {
       return previouslyCalculated_γ(t,i)
     } else {
@@ -152,7 +153,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * Returns the count of how often this HMM
    * is expected to begin in state <code>i</code>.
    */
-  def expectedStartsFrom_i(i:Int) : BigDecimal = {
+  def expectedStartsFrom_i(i:Int) : Probability = {
     return γ(1,i)
   }
 
@@ -161,7 +162,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * is expected to transition from state <code>i</code>
    * into state <code>j</code>.
    */  
-  def expectedTransitionsFrom_i_to_j(i:Int, j:Int) : BigDecimal = {
+  def expectedTransitionsFrom_i_to_j(i:Int, j:Int) : Probability = {
     return Σ_time( t => ξ(t,i,j) )
 //    var sum = 0.0
 //	for (t <- 1 to T) {
@@ -175,7 +176,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * is expected to transition from state <code>i</code>
    * into any next state.
    */   
-  def expectedTransitionsFrom_i(i:Int) : BigDecimal = {
+  def expectedTransitionsFrom_i(i:Int) : Probability = {
       return Σ_time( t => γ(t,i) )
 //    var sum = 0.0
 //	for (t <- 1 to T) {
@@ -189,12 +190,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * is expected to emit observation <code>k</code>
    * from state <code>i</code>.
    */   
-  def expectedObservationsOf_k_from_i(i:Int, k:Int) : BigDecimal = {
+  def expectedObservationsOf_k_from_i(i:Int, k:Int) : Probability = {
       return Σ_observations( t => {
           if (k == V.getInt(O(t))) 
               γ(t,i) 
           else 
-              0.0 
+              new Probability(0)
       })
 //    var sum = 0.0
 //	for (t <- 1 to T) {

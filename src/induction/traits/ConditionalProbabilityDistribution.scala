@@ -1,12 +1,14 @@
 package induction.traits
 
+import induction.math.Probability
+
 trait ConditionalProbabilityDistribution {
 	
   val variableVocabSize: Int
   val givenVariableVocabSize: Int
-  val probabilities : Array[BigDecimal]
+  val probabilities : Array[Probability]
   
-  def apply(givenAnotherVariable:Int, variable:Int) : BigDecimal = {
+  def apply(givenAnotherVariable:Int, variable:Int) : Probability = {
     return probabilities(getIndexFor(variable,givenAnotherVariable))
   }
   
@@ -21,7 +23,7 @@ trait ConditionalProbabilityDistribution {
     
     for (g <- 0 until givenVariableVocabSize) {
     	for (v <- 0 until variableVocabSize) {
-    		val p : BigDecimal = this.apply(v,g)
+    		val p : Probability = this.apply(v,g)
     		s.append(toString(v,g,p,variableVocab,givenVariableVocab))
     		s.append('\n')
     	} 
@@ -30,7 +32,7 @@ trait ConditionalProbabilityDistribution {
     return s.toString
   }
   
-  def toString(variable:Int, givenAnotherVariable:Int, probability:BigDecimal, variableVocab:Option[Vocabulary]=None, givenVariableVocab:Option[Vocabulary]=None) : String = {
+  def toString(variable:Int, givenAnotherVariable:Int, probability:Probability, variableVocab:Option[Vocabulary]=None, givenVariableVocab:Option[Vocabulary]=None) : String = {
     val variableString = variableVocab match {
       case None => variable.toString
       case Some(vocab) => vocab.getString(variable)

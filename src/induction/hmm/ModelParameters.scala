@@ -3,6 +3,7 @@ package induction.hmm
 import induction.immutable.ConditionalProbabilityDistribution
 import induction.immutable.PriorProbabilityDistribution
 import induction.immutable.Vocabulary
+import induction.math.Probability
 import scala.collection.mutable.HashMap
 
 /**
@@ -36,7 +37,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def π(i:Int) : BigDecimal = {
+    def π(i:Int) : Probability = {
     	if (i<0 || i>=N) {
     		throw new ArrayIndexOutOfBoundsException(i)
     	} else {
@@ -50,7 +51,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def b(i:Int, o:String) : BigDecimal = {
+    def b(i:Int, o:String) : Probability = {
       	if (i<0 || i>=N) {
       		throw new ArrayIndexOutOfBoundsException(i)
       	} else {
@@ -63,7 +64,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def a(i:Int, j:Int) : BigDecimal = {
+    def a(i:Int, j:Int) : Probability = {
 		if (i<0 || i>=N) {
 			throw new ArrayIndexOutOfBoundsException(i)
 		} else if (j<0 || j>=N) {
@@ -87,6 +88,8 @@ class ModelParameters(
  */
 object ModelParameters {
 	
+    private def bigDecimalZero = BigDecimal(0,Probability.mathContext)
+    
     /** Initialize a uniform set of model parameters */
 	def uniform(V:Vocabulary, numHiddenStates:Int) : ModelParameters = {
 
@@ -119,14 +122,14 @@ object ModelParameters {
     	import induction.mutable.PriorProbabilityDistribution
     	
         val expectedStartsFrom = new HashMap[Int,BigDecimal] {
-    	    override def default(key: Int) = 0.0
+    	    override def default(key: Int) = bigDecimalZero
     	}
     	
-    	var totalExpectedStarts : BigDecimal = 0.0
+    	var totalExpectedStarts = bigDecimalZero
     	for (hmm <- hmms) {
     	    System.err.print(".")
     		hmm.λ.hiddenStateIndices.foreach(i => {
-    			val count  = hmm.expectedStartsFrom_i(i)
+    			val count  = hmm.expectedStartsFrom_i(i).toBigDecimal
     			expectedStartsFrom(i) += count
     			totalExpectedStarts   += count
     		})
@@ -134,7 +137,7 @@ object ModelParameters {
 	    System.err.print("\n")  
     	val Π = new PriorProbabilityDistribution(numHiddenStates)
     	hmms.head.λ.hiddenStateIndices.foreach(i => {
-    		Π(i) = expectedStartsFrom(i) / totalExpectedStarts  
+    		Π(i) = new Probability(expectedStartsFrom(i),totalExpectedStarts)
     	})
 	      
     	return Π.immutable
@@ -150,19 +153,19 @@ object ModelParameters {
         import induction.mutable.ConditionalProbabilityDistribution
         
         val expectedTransitionsFrom = new HashMap[(Int,Int),BigDecimal] {
-    	    override def default(key: (Int,Int)) = 0.0
+    	    override def default(key: (Int,Int)) = bigDecimalZero
     	}
         
         val totalExpectedTransitionsFrom = new HashMap[Int,BigDecimal] {
-            override def default(key: Int) = 0.0
+            override def default(key: Int) = bigDecimalZero
         }
         
         hmms.foreach( hmm => {
             System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
-                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i)
+                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i).toBigDecimal
             	hmm.λ.hiddenStateIndices.foreach(j => {
-            		expectedTransitionsFrom(i,j) += hmm.expectedTransitionsFrom_i_to_j(i, j)
+            		expectedTransitionsFrom(i,j) += hmm.expectedTransitionsFrom_i_to_j(i, j).toBigDecimal
             	})
             })
         })
@@ -171,7 +174,7 @@ object ModelParameters {
         
         hmms.head.λ.hiddenStateIndices.foreach(i => {
     		hmms.head.λ.hiddenStateIndices.foreach(j => {
-    			A(i,j) = expectedTransitionsFrom(i,j) / totalExpectedTransitionsFrom(i)
+    			A(i,j) = new Probability(expectedTransitionsFrom(i,j),totalExpectedTransitionsFrom(i))
     		})
     	})
         
@@ -182,19 +185,19 @@ object ModelParameters {
         import induction.mutable.ConditionalProbabilityDistribution
         
         val expectedObservations = new HashMap[(Int,Int),BigDecimal] {
-            override def default(key: (Int,Int)) = 0.0
+            override def default(key: (Int,Int)) = bigDecimalZero
         }
         
         val totalExpectedTransitionsFrom = new HashMap[Int,BigDecimal] {
-            override def default(key: Int) = 0.0
+            override def default(key: Int) = bigDecimalZero
         }
 
         hmms.foreach( hmm => {
             System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
-                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i)
+                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i).toBigDecimal
             	V.indices.foreach(k => {
-            		expectedObservations(i,k) += hmm.expectedObservationsOf_k_from_i(i, k)
+            		expectedObservations(i,k) += hmm.expectedObservationsOf_k_from_i(i, k).toBigDecimal
             	})
             })
         })        
@@ -202,7 +205,7 @@ object ModelParameters {
         val B = new ConditionalProbabilityDistribution(V.size,numHiddenStates)
         hmms.head.λ.hiddenStateIndices.foreach(i => {
     		V.indices.foreach(k => {
-    			B(i,k) = expectedObservations(i,k) / totalExpectedTransitionsFrom(i)
+    			B(i,k) = new Probability(expectedObservations(i,k),totalExpectedTransitionsFrom(i))
     		})
     	})
     	

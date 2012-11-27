@@ -1,23 +1,24 @@
 package induction.mutable
 
+import induction.math.Probability
 import scala.collection.mutable.ArrayBuffer
 
 class ConditionalProbabilityDistribution(val variableVocabSize:Int, val givenVariableVocabSize:Int) extends induction.traits.ConditionalProbabilityDistribution {
 
-  val probabilities = new Array[BigDecimal](variableVocabSize * givenVariableVocabSize)
+  val probabilities = new Array[Probability](variableVocabSize * givenVariableVocabSize)
   
-  this.setUniform(0.0)
+  this.setUniform(new Probability(0))
   
-  def update(givenAnotherVariable:Int, variable:Int, probability:BigDecimal) : Unit = {
+  def update(givenAnotherVariable:Int, variable:Int, probability:Probability) : Unit = {
       val index = getIndexFor(variable,givenAnotherVariable)
     probabilities(index) = probability
   }
   
   def setUniform {
-    setUniform(BigDecimal(1) / BigDecimal(variableVocabSize))
+    setUniform(new Probability(1,variableVocabSize))
   }
   
-  def setUniform(probability:BigDecimal) {
+  def setUniform(probability:Probability) {
     for (i <- 0 until probabilities.size) { 
     	probabilities(i) = probability
   	}
@@ -34,7 +35,7 @@ object ConditionalProbabilityDistribution {
   def uniform(variableVocabSize:Int, givenVariableVocabSize:Int) : ConditionalProbabilityDistribution = {
     val d = new ConditionalProbabilityDistribution(variableVocabSize,givenVariableVocabSize)
     
-    d.setUniform(BigDecimal(1) / BigDecimal(variableVocabSize))
+    d.setUniform(new Probability(1,variableVocabSize))
     
     return d
   }
