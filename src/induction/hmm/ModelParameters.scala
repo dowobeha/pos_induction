@@ -54,7 +54,7 @@ class ModelParameters(
       	if (i<0 || i>=N) {
       		throw new ArrayIndexOutOfBoundsException(i)
       	} else {
-      		return B(V.getInt(o),i)
+      		return B(i, V.getInt(o))
       	}
     }
     
@@ -69,7 +69,7 @@ class ModelParameters(
 		} else if (j<0 || j>=N) {
 			throw new ArrayIndexOutOfBoundsException(j)
 		} else {
-			return A(j,i)
+			return A(i,j)
 		}
     }
        

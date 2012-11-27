@@ -6,7 +6,7 @@ trait ConditionalProbabilityDistribution {
   val givenVariableVocabSize: Int
   val probabilities : Array[Double]
   
-  def apply(variable:Int, givenAnotherVariable:Int) : Double = {
+  def apply(givenAnotherVariable:Int, variable:Int) : Double = {
     return probabilities(getIndexFor(variable,givenAnotherVariable))
   }
   

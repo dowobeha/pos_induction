@@ -8,8 +8,9 @@ class ConditionalProbabilityDistribution(val variableVocabSize:Int, val givenVar
   
   this.setUniform(0.0)
   
-  def update(variable:Int, givenAnotherVariable:Int, probability:Double) : Unit = {
-    probabilities(getIndexFor(variable,givenAnotherVariable)) = probability
+  def update(givenAnotherVariable:Int, variable:Int, probability:Double) : Unit = {
+      val index = getIndexFor(variable,givenAnotherVariable)
+    probabilities(index) = probability
   }
   
   def setUniform {
