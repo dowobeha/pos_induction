@@ -1,6 +1,7 @@
 package induction.hmm
 
 import induction.util.OneBasedArray
+import induction.util.Math
 import scala.collection.mutable.HashMap
 
 class HMM(val sentence:String, val λ:ModelParameters) {
@@ -16,7 +17,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   
   /** Number of observations */
   val T: Int = O.length
-  
+    
+  /** Defines a summation over hidden state indices. */
+  def Σ_hiddenStates(f:(Int => Double)) = Math.summation(λ.hiddenStateIndices, f)//λ.hiddenStateIndices.foldLeft(0.0) ((runningSum,i) => runningSum + f(i))
+    
+  /** Defines a summation over time. */
+  def Σ_time(f:(Int => Double)) = Math.summation(1 to T, f)
   
   /** Forward probability cache */
   private val previouslyCalculated_α = new HashMap[(Int,Int),Double]
@@ -30,11 +36,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   
   /** Forward probability of entire observation sequence. */
   def α : Double = {
-    var sum = 0.0
-    for (i <- 1 to N) {
-    	sum += α(T,i)
-    }
-    return sum
+    return Σ_hiddenStates( i => α(T,i) )
   }
 
   /** 
@@ -56,18 +58,14 @@ class HMM(val sentence:String, val λ:ModelParameters) {
     	val value = 
 		    if (t < 1 || t > T) {
 		      throw new ArrayIndexOutOfBoundsException(t)
-		    } else if (j < 1 || j > N) {
+		    } else if (j < 0 || j >= N) {
 		      throw new ArrayIndexOutOfBoundsException(j)
 		    } else if (t==1) {
 		      //Console.err.println("Base case:      calculating α for t==" + t + ", j==" + j)
 		      π(j) * b(j,O(t))
 		    } else {
 		      //Console.err.println("Recursive case: calculating α for t==" + t + ", j==" + j)
-		      var sum = 0.0
-		      for (i <- 1 to N) {
-		        sum += α(t-1,i) * a(i,j)
-		      }
-		      sum * b(j,O(t)) 
+		      Σ_hiddenStates( i => α(t-1,i) * a(i,j) ) * b(j,O(t))
 		    }
     	
     	previouslyCalculated_α.update((t,j),value)
@@ -78,12 +76,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
 
   /** Backward probability of entire observation sequence. */
   def β : Double = {
-    
-    var sum = 0.0
-    for (i <- 1 to N) {
-    	sum += β(1,i)
-    }
-    return sum
+    return Σ_hiddenStates( i => β(1,i) )
+//    var sum = 0.0
+//    for (i <- 1 to N) {
+//    	sum += β(1,i)
+//    }
+//    return sum
   }
   
   /**
@@ -105,16 +103,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
     	val value = 
 		    if (t < 1 || t > T) {
 		      throw new ArrayIndexOutOfBoundsException(t)
-		    } else if (j < 1 || j > N) {
+		    } else if (j < 0 || j >= N) {
 		      throw new ArrayIndexOutOfBoundsException(j)
 		    } else if (t==T) {
 		      1.0
 		    } else {
-		      var sum = 0.0
-		      for (i <- 1 to N) {
-		        sum += a(i,j) * b(j,O(t+1)) * β(t+1,j)
-		      }
-		      sum
+		      Σ_hiddenStates( i => a(i,j) * b(j,O(t+1)) * β(t+1,j) )
 		    }
     	
     	previouslyCalculated_β.update((t,j),value)
@@ -145,14 +139,11 @@ class HMM(val sentence:String, val λ:ModelParameters) {
     if (previouslyCalculated_γ.contains(t,i)) {
       return previouslyCalculated_γ(t,i)
     } else {
-    	var sum = 0.0
-    	for (j <- 1 to N) {
-    	    if (T>t) {
-    	    	sum += ξ(t,i,j)
-    	    } else {
-    	    	sum += α(t,i) / α
-    	    }
-    	}
+        val sum = 
+        	if ( t < T )
+        		Σ_hiddenStates( j => ξ(t,i,j) )
+        	else
+        		α(t,i) / α //TODO Is this line correct?
     	previouslyCalculated_γ.update((t,i),sum)
     	return sum
     }
@@ -175,11 +166,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * into state <code>j</code>.
    */  
   def expectedTransitionsFrom_i_to_j(i:Int, j:Int) : Double = {
-    var sum = 0.0
-	for (t <- 1 to T) {
-		sum += ξ(t,i,j)
-	}
-	return sum
+    return Σ_time( t => ξ(t,i,j) )
+//    var sum = 0.0
+//	for (t <- 1 to T) {
+//		sum += ξ(t,i,j)
+//	}
+//	return sum
   }
 
   /**
@@ -188,11 +180,12 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * into any next state.
    */   
   def expectedTransitionsFrom_i(i:Int) : Double = {
-    var sum = 0.0
-	for (t <- 1 to T) {
-		sum += γ(t,i)
-	}
-	return sum
+      return Σ_time( t => γ(t,i) )
+//    var sum = 0.0
+//	for (t <- 1 to T) {
+//		sum += γ(t,i)
+//	}
+//	return sum
   }
 
   /**
@@ -201,13 +194,19 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * from state <code>i</code>.
    */   
   def expectedObservationsOf_k_from_i(i:Int, k:Int) : Double = {
-    var sum = 0.0
-	for (t <- 1 to T) {
-		if (k == V.getInt(O(t))) {
-			sum += γ(t,i)
-		}
-	}
-	return sum
+      return Σ_time( t => {
+          if (k == V.getInt(O(t))) 
+              γ(t,i) 
+          else 
+              0.0 
+      })
+//    var sum = 0.0
+//	for (t <- 1 to T) {
+//		if (k == V.getInt(O(t))) {
+//			sum += γ(t,i)
+//		}
+//	}
+//	return sum
   }
   
 }

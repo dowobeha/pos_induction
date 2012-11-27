@@ -27,21 +27,20 @@ class ModelParameters(
 ) {
     
     /** 
-     * Range of hidden state values, from 0 up to and including N 
+     * Range of hidden state values, from 0 up to but not including N 
      */
-    val hiddenStateIndices : Range = 1 to N
+    val hiddenStateIndices : Range = 0 until N
     
     /**
      * Prior probability of beginning in state i.
      * <p>
-     * Note: The state values that this method accepts range from 1 up to and including N
+     * Note: The state values that this method accepts range from 0 up to but not including N
      */
     def π(i:Int) : Double = {
-    	if (i<1 || i>N) {
+    	if (i<0 || i>=N) {
     		throw new ArrayIndexOutOfBoundsException(i)
     	} else {
-    		// We need to translate 1-based state indices into 0-based state indices
-    		return Π(i-1)
+    		return Π(i)
     	}
     }
     
@@ -49,30 +48,28 @@ class ModelParameters(
      * Probability of emitting observation symbol o
      * from hidden state i.
      * <p>
-     * Note: The state values that this method accepts range from 1 up to and including N
+     * Note: The state values that this method accepts range from 0 up to but not including N
      */
     def b(i:Int, o:String) : Double = {
-      	if (i<1 || i>N) {
+      	if (i<0 || i>=N) {
       		throw new ArrayIndexOutOfBoundsException(i)
       	} else {
-      		// We need to translate 1-based state indices into 0-based state indices
-      		return B(V.getInt(o),i-1)
+      		return B(V.getInt(o),i)
       	}
     }
     
     /**
      * Probability of transitioning from hidden state i to hidden state j.
      * <p>
-     * Note: The state values that this method accepts range from 1 up to and including N
+     * Note: The state values that this method accepts range from 0 up to but not including N
      */
     def a(i:Int, j:Int) : Double = {
-		if (i<1 || i>N) {
+		if (i<0 || i>=N) {
 			throw new ArrayIndexOutOfBoundsException(i)
-		} else if (j<1 || j>N) {
+		} else if (j<0 || j>=N) {
 			throw new ArrayIndexOutOfBoundsException(j)
 		} else {
-			// We need to translate 1-based state indices into 0-based state indices
-			return A(j-1,i-1)
+			return A(j,i)
 		}
     }
        
@@ -132,7 +129,7 @@ object ModelParameters {
     	}
 	      
     	val Π = new PriorProbabilityDistribution(numHiddenStates)
-    	(1 to numHiddenStates).foreach(i => {
+    	hmms.head.λ.hiddenStateIndices.foreach(i => {
     		Π(i) = expectedStartsFrom(i) / totalExpectedStarts  
     	})
 	      
@@ -167,8 +164,8 @@ object ModelParameters {
         
         val A = new ConditionalProbabilityDistribution(numHiddenStates,numHiddenStates)
         
-        (1 to numHiddenStates).foreach(i => {
-    		(1 to numHiddenStates).foreach(j => {
+        hmms.head.λ.hiddenStateIndices.foreach(i => {
+    		hmms.head.λ.hiddenStateIndices.foreach(j => {
     			A(i,j) = expectedTransitionsFrom(i,j) / totalExpectedTransitionsFrom(i)
     		})
     	})
@@ -197,7 +194,7 @@ object ModelParameters {
         })        
         
         val B = new ConditionalProbabilityDistribution(V.size,numHiddenStates)
-        (1 to numHiddenStates).foreach(i => {
+        hmms.head.λ.hiddenStateIndices.foreach(i => {
     		V.indices.foreach(k => {
     			B(i,k) = expectedObservations(i,k) / totalExpectedTransitionsFrom(i)
     		})
