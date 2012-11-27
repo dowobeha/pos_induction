@@ -3,7 +3,7 @@ package induction.hmm
 import induction.util.OneBasedArray
 import scala.collection.mutable.HashMap
 
-class HMM(sentence:String, val λ:ModelParameters) {
+class HMM(val sentence:String, val λ:ModelParameters) {
 
   import λ._
   
@@ -147,7 +147,11 @@ class HMM(sentence:String, val λ:ModelParameters) {
     } else {
     	var sum = 0.0
     	for (j <- 1 to N) {
-    		sum += ξ(t,i,j)
+    	    if (T>t) {
+    	    	sum += ξ(t,i,j)
+    	    } else {
+    	    	sum += α(t,i) / α
+    	    }
     	}
     	previouslyCalculated_γ.update((t,i),sum)
     	return sum

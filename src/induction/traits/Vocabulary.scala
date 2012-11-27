@@ -26,7 +26,7 @@ trait Vocabulary {
      * Range of vocabulary integer values, 
      * from 0 up to but not including <code>size</code>
      */
-    val indices : Range = 0 until size
+    def indices : Range = 0 until size
 	
 	def getInt(s:String) : Int = {
 	  stringToInt.get(s) match {

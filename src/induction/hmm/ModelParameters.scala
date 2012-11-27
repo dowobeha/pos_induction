@@ -27,7 +27,7 @@ class ModelParameters(
 ) {
     
     /** 
-     * Range of hidden state values, from 1 up to and including N 
+     * Range of hidden state values, from 0 up to and including N 
      */
     val hiddenStateIndices : Range = 1 to N
     
