@@ -21,8 +21,11 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   /** Defines a summation over hidden state indices. */
   def Σ_hiddenStates(f:(Int => Double)) = Math.summation(λ.hiddenStateIndices, f)//λ.hiddenStateIndices.foldLeft(0.0) ((runningSum,i) => runningSum + f(i))
     
-  /** Defines a summation over time. */
-  def Σ_time(f:(Int => Double)) = Math.summation(1 to T, f)
+  /** Defines a summation over time, for t=1 to T-1. */
+  def Σ_time(f:(Int => Double)) = Math.summation(1 until T, f)
+
+  /** Defines a summation over time, for t=1 to T. */
+  def Σ_observations(f:(Int => Double)) = Math.summation(1 to T, f)  
   
   /** Forward probability cache */
   private val previouslyCalculated_α = new HashMap[(Int,Int),Double]
@@ -75,14 +78,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
   }
 
   /** Backward probability of entire observation sequence. */
-  def β : Double = {
-    return Σ_hiddenStates( i => β(1,i) )
-//    var sum = 0.0
-//    for (i <- 1 to N) {
-//    	sum += β(1,i)
-//    }
-//    return sum
-  }
+  def β : Double = Σ_hiddenStates( i => β(1,i) )
   
   /**
    * Backward probability of the observation sequence after time <code>t</code>.
@@ -194,7 +190,7 @@ class HMM(val sentence:String, val λ:ModelParameters) {
    * from state <code>i</code>.
    */   
   def expectedObservationsOf_k_from_i(i:Int, k:Int) : Double = {
-      return Σ_time( t => {
+      return Σ_observations( t => {
           if (k == V.getInt(O(t))) 
               γ(t,i) 
           else 
