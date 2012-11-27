@@ -4,17 +4,17 @@ import scala.collection.mutable.ArrayBuffer
 
 class PriorProbabilityDistribution(val variableVocabSize:Int) extends induction.traits.PriorProbabilityDistribution {
 
-  val probabilities = new Array[Double](variableVocabSize)
+  val probabilities = new Array[BigDecimal](variableVocabSize)
   
-  def update(variable:Int, probability:Double) : Unit = {
+  def update(variable:Int, probability:BigDecimal) : Unit = {
     probabilities(variable) = probability
   }
   
   def setUniform {
-    setUniform(1.0 / variableVocabSize.toDouble)
+    setUniform(BigDecimal(1) / BigDecimal(variableVocabSize))
   }
   
-  def setUniform(probability:Double) {
+  def setUniform(probability:BigDecimal) {
     for (i <- 0 until probabilities.size) { 
     	probabilities(i) = probability
   	}
@@ -31,7 +31,7 @@ object PriorProbabilityDistribution {
   def uniform(variableVocabSize:Int) : PriorProbabilityDistribution = {
     val d = new PriorProbabilityDistribution(variableVocabSize)
     
-    d.setUniform(1.0 / variableVocabSize.toDouble)
+    d.setUniform(BigDecimal(1) / BigDecimal(variableVocabSize))
     
     return d
   }

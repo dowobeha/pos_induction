@@ -36,7 +36,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def π(i:Int) : Double = {
+    def π(i:Int) : BigDecimal = {
     	if (i<0 || i>=N) {
     		throw new ArrayIndexOutOfBoundsException(i)
     	} else {
@@ -50,7 +50,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def b(i:Int, o:String) : Double = {
+    def b(i:Int, o:String) : BigDecimal = {
       	if (i<0 || i>=N) {
       		throw new ArrayIndexOutOfBoundsException(i)
       	} else {
@@ -63,7 +63,7 @@ class ModelParameters(
      * <p>
      * Note: The state values that this method accepts range from 0 up to but not including N
      */
-    def a(i:Int, j:Int) : Double = {
+    def a(i:Int, j:Int) : BigDecimal = {
 		if (i<0 || i>=N) {
 			throw new ArrayIndexOutOfBoundsException(i)
 		} else if (j<0 || j>=N) {
@@ -118,11 +118,11 @@ object ModelParameters {
     private def reestimate_Π(numHiddenStates:Int, hmms:Iterable[HMM]) : PriorProbabilityDistribution = {
     	import induction.mutable.PriorProbabilityDistribution
     	
-        val expectedStartsFrom = new HashMap[Int,Double] {
+        val expectedStartsFrom = new HashMap[Int,BigDecimal] {
     	    override def default(key: Int) = 0.0
     	}
     	
-    	var totalExpectedStarts : Double = 0.0
+    	var totalExpectedStarts : BigDecimal = 0.0
     	for (hmm <- hmms) {
     	    System.err.print(".")
     		hmm.λ.hiddenStateIndices.foreach(i => {
@@ -149,11 +149,11 @@ object ModelParameters {
 
         import induction.mutable.ConditionalProbabilityDistribution
         
-        val expectedTransitionsFrom = new HashMap[(Int,Int),Double] {
+        val expectedTransitionsFrom = new HashMap[(Int,Int),BigDecimal] {
     	    override def default(key: (Int,Int)) = 0.0
     	}
         
-        val totalExpectedTransitionsFrom = new HashMap[Int,Double] {
+        val totalExpectedTransitionsFrom = new HashMap[Int,BigDecimal] {
             override def default(key: Int) = 0.0
         }
         
@@ -181,11 +181,11 @@ object ModelParameters {
     private def reestimate_B(V:Vocabulary, numHiddenStates:Int, hmms:Iterable[HMM]) : ConditionalProbabilityDistribution = {
         import induction.mutable.ConditionalProbabilityDistribution
         
-        val expectedObservations = new HashMap[(Int,Int),Double] {
+        val expectedObservations = new HashMap[(Int,Int),BigDecimal] {
             override def default(key: (Int,Int)) = 0.0
         }
         
-        val totalExpectedTransitionsFrom = new HashMap[Int,Double] {
+        val totalExpectedTransitionsFrom = new HashMap[Int,BigDecimal] {
             override def default(key: Int) = 0.0
         }
 

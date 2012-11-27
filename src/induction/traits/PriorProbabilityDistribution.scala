@@ -3,9 +3,9 @@ package induction.traits
 trait PriorProbabilityDistribution {
 	
   val variableVocabSize: Int
-  val probabilities : Array[Double]
+  val probabilities : Array[BigDecimal]
   
-  def apply(variable:Int) : Double = {
+  def apply(variable:Int) : BigDecimal = {
     return probabilities(variable)
   }
   
@@ -15,7 +15,7 @@ trait PriorProbabilityDistribution {
     val s = new StringBuilder
     
     for (v <- 0 until variableVocabSize) {
-    	val p : Double = this.apply(v)
+    	val p : BigDecimal = this.apply(v)
     	s.append(toString(v,p,variableVocab))
     	s.append('\n')
     }
@@ -23,7 +23,7 @@ trait PriorProbabilityDistribution {
     return s.toString
   }
   
-  def toString(variable:Int, probability:Double, variableVocab:Option[Vocabulary]=None) : String = {
+  def toString(variable:Int, probability:BigDecimal, variableVocab:Option[Vocabulary]=None) : String = {
     val variableString = variableVocab match {
       case None => variable.toString
       case Some(vocab) => vocab.getString(variable)
