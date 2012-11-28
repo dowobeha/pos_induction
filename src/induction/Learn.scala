@@ -43,37 +43,42 @@ object Learn {
     }
     
     hmms.foreach( hmm => {
-        if (hmm.α.toBigDecimal <= 0) {
+        if (hmm.α.toBigDecimal.compareTo(Probability.ZERO.toBigDecimal) == 0) {
             System.err.println("Zero probability sentence:\t" + hmm.sentence)
         }
     })
     
-    val reestimated_λ = ModelParameters.reestimate(λ, hmms)
-    
-    def Σ_hmm(f:(HMM => Probability)) = Math.summation(hmms,f)
-
-    val corpus_wordcount           = Math.summation[HMM,Int](hmms, (hmm:HMM) => hmm.T )    
-    
-    val corpus_prob             = Σ_hmm( hmm => hmm.α )
-    val reestimated_corpus_prob = Σ_hmm( hmm => new HMM(hmm.sentence, reestimated_λ).α )
-    
-//    def perplexity(summation:BigDecimal) = {
-//        summation.pow(n)
-//    }
-    
-    println("Corpus prob: " + corpus_prob + " → " + reestimated_corpus_prob)
-//
-//    val corpus_perplexity              =  pow( E,             -corpus_logprob / corpus_wordcount )
-//    val reestimated_corpus_perplexity  =  pow( E, -reestimated_corpus_logprob / corpus_wordcount )
+//    var λ_before = λ
 //    
-//    println("Corpus perplexity: " + corpus_perplexity + " → " + reestimated_corpus_perplexity)
-    
-//    hmms.foreach(hmm => {
-////        println(hmm.sentence)
-//        val α     = hmm.α
-//        val new_α = new HMM(hmm.sentence, reestimated_λ).α
-//        println("Probability of sentence: " + α + " → " + new_α)
-//    })
+    var Δ = Double.PositiveInfinity
+//    
+//    while (Δ > 25) {
+        
+	    val reestimated_λ = ModelParameters.reestimate(λ, hmms)
+	    
+	    def Σ_hmm(f:(HMM => Double)) = Math.summation(hmms,f)
+	
+	    val corpus_wordcount           = Math.summation(hmms, (hmm:HMM) => hmm.T )    
+	    
+	    val corpus_logprob             = Σ_hmm( hmm => hmm.α.logProb )
+	    
+	    for (i <- 0 until hmms.size) {
+	        hmms(i) = new HMM(hmms(i).sentence, reestimated_λ)
+	    }
+	    
+	    val reestimated_corpus_logprob = Σ_hmm( hmm => new HMM(hmm.sentence, reestimated_λ).α.logProb )
+	
+	    println("Corpus (base e) logprob:    " + corpus_logprob + " → " + reestimated_corpus_logprob)
+	
+	    val corpus_perplexity              =  pow( 10,             -corpus_logprob / corpus_wordcount )
+	    val reestimated_corpus_perplexity  =  pow( 10, -reestimated_corpus_logprob / corpus_wordcount )
+	    
+	    Δ = ((corpus_perplexity - reestimated_corpus_perplexity) / corpus_perplexity ) * 100
+	    
+	    println("Corpus (base e) perplexity: " + corpus_perplexity + " → " + reestimated_corpus_perplexity)
+	    println("Corpus (base e) perplexity: " + Δ + "% reduction")
+	    
+//    }    
     
   }
 

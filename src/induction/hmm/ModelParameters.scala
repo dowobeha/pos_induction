@@ -4,6 +4,7 @@ import induction.immutable.ConditionalProbabilityDistribution
 import induction.immutable.PriorProbabilityDistribution
 import induction.immutable.Vocabulary
 import induction.math.Probability
+import java.math.BigDecimal
 import scala.collection.mutable.HashMap
 
 /**
@@ -88,7 +89,7 @@ class ModelParameters(
  */
 object ModelParameters {
 	
-    private def bigDecimalZero = BigDecimal(0,Probability.mathContext)
+    private def bigDecimalZero = new BigDecimal(0,Probability.mathContext)
     
     /** Initialize a uniform set of model parameters */
 	def uniform(V:Vocabulary, numHiddenStates:Int) : ModelParameters = {
@@ -130,8 +131,8 @@ object ModelParameters {
     	    System.err.print(".")
     		hmm.λ.hiddenStateIndices.foreach(i => {
     			val count  = hmm.expectedStartsFrom_i(i).toBigDecimal
-    			expectedStartsFrom(i) += count
-    			totalExpectedStarts   += count
+    			expectedStartsFrom(i) = expectedStartsFrom(i).add(count)
+    			totalExpectedStarts   = totalExpectedStarts.add(count)
     		})
     	}
 	    System.err.print("\n")  
@@ -163,9 +164,9 @@ object ModelParameters {
         hmms.foreach( hmm => {
             System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
-                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i).toBigDecimal
+                totalExpectedTransitionsFrom(i) = totalExpectedTransitionsFrom(i).add(hmm.expectedTransitionsFrom_i(i).toBigDecimal)
             	hmm.λ.hiddenStateIndices.foreach(j => {
-            		expectedTransitionsFrom(i,j) += hmm.expectedTransitionsFrom_i_to_j(i, j).toBigDecimal
+            		expectedTransitionsFrom((i,j)) = expectedTransitionsFrom(i,j).add(hmm.expectedTransitionsFrom_i_to_j(i, j).toBigDecimal)
             	})
             })
         })
@@ -195,9 +196,9 @@ object ModelParameters {
         hmms.foreach( hmm => {
             System.err.print(".")
             hmm.λ.hiddenStateIndices.foreach(i => {
-                totalExpectedTransitionsFrom(i) += hmm.expectedTransitionsFrom_i(i).toBigDecimal
+                totalExpectedTransitionsFrom(i) = totalExpectedTransitionsFrom(i).add(hmm.expectedTransitionsFrom_i(i).toBigDecimal)
             	V.indices.foreach(k => {
-            		expectedObservations(i,k) += hmm.expectedObservationsOf_k_from_i(i, k).toBigDecimal
+            		expectedObservations((i,k)) = expectedObservations(i,k).add(hmm.expectedObservationsOf_k_from_i(i, k).toBigDecimal)
             	})
             })
         })        
