@@ -3,5 +3,11 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/jppf-client.jar"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/jppf-common.jar"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/jppf-common-node.jar"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/log4j-1.2.15.jar"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/slf4j-api-1.6.1.jar"/>
+	<classpathentry kind="lib" path="/tools/OGS/ge2011.11p1/jppf/build/JPPF-3.1.4-application-template/lib/slf4j-log4j12-1.6.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
