@@ -18,7 +18,10 @@ object Learn {
         
     val textFile = args(0)
     val numHiddenStates = args(1).toInt
+//    val newMethod = args(2)=="new"
 
+    System.err.println("Reading from " + textFile)
+    
 	/** Vocabulary of observation symbols */
   	val V = new Vocabulary()
 
@@ -54,7 +57,12 @@ object Learn {
 //    
 //    while (Δ > 25) {
         
-	    val reestimated_λ = ModelParameters.reestimate(λ, hmms)
+	    val reestimated_λ = ModelParameters.jppfReestimate(λ, hmms) 
+//	        if (newMethod) {
+//	            ModelParameters.alternateReestimate(λ, hmms) 
+//	        } else {
+//	        	ModelParameters.reestimate(λ, hmms)   
+//	        }
 	    
 	    def Σ_hmm(f:(HMM => Double)) = Math.summation(hmms,f)
 	
@@ -80,6 +88,7 @@ object Learn {
 	    
 //    }    
     
+	    grid.JPPF.close
   }
 
 }

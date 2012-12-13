@@ -89,7 +89,7 @@ class ModelParameters(
  */
 object ModelParameters {
 	
-    private def bigDecimalZero = new BigDecimal(0,Probability.mathContext)
+    val bigDecimalZero = new BigDecimal(0,Probability.mathContext)
     
     /** Initialize a uniform set of model parameters */
 	def uniform(V:Vocabulary, numHiddenStates:Int) : ModelParameters = {
@@ -114,6 +114,79 @@ object ModelParameters {
 	    val B = reestimate_B(λ.V, λ.N, hmms)
 	    
 	    return new ModelParameters(λ.N, Π, A, B, λ.V)
+	}
+	
+	def alternateReestimate(λ:ModelParameters, hmms:Iterable[HMM]) : ModelParameters = {
+	    
+	    val totalCounts : ModelReestimationCounts = 
+	        hmms.foldLeft(new ModelReestimationCounts(λ))(
+	        	(counts,hmm) => counts + new ModelReestimationCounts(hmm)
+	        )
+	    
+	    return totalCounts.reestimateModelParameters
+	}	
+	
+	def jppfReestimate(λ:ModelParameters, hmms:Iterable[HMM]) : ModelParameters = {
+//    	import org.jppf.client.JPPFClient;
+//    	import org.jppf.client.JPPFJob;
+//    	import org.jppf.server.protocol.JPPFTask;
+    	import grid.JPPF
+    	import induction.jppf.ForwardBackwardTask
+//    	import scala.collection.JavaConversions
+    	
+//    	val client = JPPF.client
+//    	try {
+//    		
+//    		val job = new JPPFJob
+//    		job.setName("Reestimate hidden Markov model parameters")
+//    		for (hmm <- hmms) {
+//    			job.addTask(new ForwardBackwardTask(hmm))
+//    		}
+//    		job.setBlocking(true)
+//
+//    		val l:java.util.List[org.jppf.server.protocol.JPPFTask] = client.submit(job) 
+//    		val completedTasks = JavaConversions.asScalaBuffer(l)
+//    		System.err.println("Are the task results null?")
+//    		for (task <- completedTasks) {
+//    		    System.err.println("task==null " + (task==null))
+//    		    System.err.println("task.getResult==null " + (task.getResult==null))
+//    		    System.err.println("task.getException==null " + (task.getException==null))
+//    		    if (task.getException!=null) {
+//    		        System.err.println(task.getException.printStackTrace)
+//    		    }
+//    		}
+//    		System.err.flush
+    	    val tasks = hmms.map(hmm => new ForwardBackwardTask(hmm))
+    	    val results = JPPF.runTasks[ModelReestimationCounts]("Reestimate hidden Markov model parameters", tasks)
+    		
+    		val totalCounts : ModelReestimationCounts = 
+    		    results.foldLeft(new ModelReestimationCounts(λ))(
+    		    	(runningCounts:ModelReestimationCounts,result:ModelReestimationCounts) => runningCounts + result
+    		    )
+//    		completedTasks.foldLeft(new ModelReestimationCounts(λ))(
+//    			(counts,task:JPPFTask) => {
+//    			    if (task.getResult==null) {
+//    			        System.err.println("Task result is null!")
+//    			    } else if (task.getResult.asInstanceOf[String]==null) {
+//    			        System.err.println("Task result.asInstanceOf[String] is null!")
+//    			    } else if (counts==null) {
+//    			        System.err.println("Counts is null")
+//    			    }
+//    			    System.err.flush
+//    			    val result:ModelReestimationCounts = grid.JPPF.deserialize(task.getResult.asInstanceOf[String]) 
+//    			    counts + result
+//    			}
+//    		)
+//
+//    		client.close
+//
+    		return totalCounts.reestimateModelParameters
+//    	} catch {
+//    	    case exception: Throwable => {
+//    	        client.close
+//    	        throw exception
+//    	    }
+//    	}
 	}
 	
     /** 
