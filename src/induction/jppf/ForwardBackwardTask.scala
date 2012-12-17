@@ -11,9 +11,12 @@ class ForwardBackwardTask(hmm:HMM) extends JPPFTask {
     
     private val serializedHMM = serialize(hmm)
     
-	def run(): Unit = { 
+	def run(): Unit = {
+        System.out.println("Running task")
 	    val hmm:HMM = deserialize(serializedHMM)
 	    val counts = new ModelReestimationCounts(hmm)
+        System.out.println("Done running task")
+        System.out.flush
 		setResult(serialize(counts))
 	}
 

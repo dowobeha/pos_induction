@@ -159,6 +159,9 @@ object ModelParameters {
     	    val tasks = hmms.map(hmm => new ForwardBackwardTask(hmm))
     	    val results = JPPF.runTasks[ModelReestimationCounts]("Reestimate hidden Markov model parameters", tasks)
     		
+    	    System.err.println("All tasks have completed, and their results have been received.")
+    	    System.err.flush
+    	    
     		val totalCounts : ModelReestimationCounts = 
     		    results.foldLeft(new ModelReestimationCounts(λ))(
     		    	(runningCounts:ModelReestimationCounts,result:ModelReestimationCounts) => runningCounts + result
