@@ -125,8 +125,10 @@ object ModelParameters {
 	    
 	    return totalCounts.reestimateModelParameters
 	}	
-	
-	def jppfReestimate(λ:ModelParameters, hmms:Iterable[HMM]) : ModelParameters = {
+	    
+
+//	def jppfReestimate(λ:ModelParameters, hmms:Iterable[HMM]) : ModelParameters = {
+	def jppfReestimate(λ:ModelParameters, sentences:Iterable[String]) : ModelParameters = {
 //    	import org.jppf.client.JPPFClient;
 //    	import org.jppf.client.JPPFJob;
 //    	import org.jppf.server.protocol.JPPFTask;
@@ -156,8 +158,13 @@ object ModelParameters {
 //    		    }
 //    		}
 //    		System.err.flush
-    	    val tasks = hmms.map(hmm => new ForwardBackwardTask(hmm))
-    	    val results = JPPF.runTasks[ModelReestimationCounts]("Reestimate hidden Markov model parameters", tasks)
+//    	    val tasks = hmms.map(hmm => new ForwardBackwardTask(hmm))
+    	System.err.println("Serializing λ")
+    	val serializedλ = JPPF.serialize(λ)
+    	System.err.println("Constructing tasks")
+    	val tasks = sentences.map(sentence => new ForwardBackwardTask(sentence,serializedλ))
+    	System.err.println("Running tasks")
+    	val results = JPPF.runTasks[ModelReestimationCounts]("Reestimate hidden Markov model parameters", tasks)
     		
     	    System.err.println("All tasks have completed, and their results have been received.")
     	    System.err.flush
